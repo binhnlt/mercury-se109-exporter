@@ -43,11 +43,11 @@ Throughput is derived at query time, e.g. `rate(mercury_port_rx_good_packets_tot
 ## Quick start
 
 ```bash
-git clone https://github.com/YOUR_USER/mercury-se109-exporter.git
+git clone https://github.com/binhnlt/mercury-se109-exporter.git
 cd mercury-se109-exporter
 cp .env.example .env
-nano .env                      # set SWITCH_HOST, SWITCH_USER, SWITCH_PASS
-docker compose up -d --build
+nano .env # set SWITCH_HOST, SWITCH_USER, SWITCH_PASS
+docker compose up -d
 ```
 
 Metrics are then served at `http://<host>:9109/metrics` — verify with:
@@ -123,17 +123,6 @@ table; port 9 is the 10G SFP+ uplink.)
 custom collector, so metrics always reflect a live scrape (no background state).
 If a scrape fails, `mercury_switch_up` goes to `0` and the port series are
 omitted for that cycle, rather than reporting stale data.
-
-### Adapting to another switch / firmware
-
-Newer or sibling models may lay the JS out slightly differently. Capture the
-real page once and adjust:
-
-```bash
-docker compose run --rm exporter --dump   # prints the raw stats page HTML
-```
-
-Then tweak `parse_stats()` / `SPEED_MAP` (or set `STATS_PATH`) to match.
 
 ---
 
