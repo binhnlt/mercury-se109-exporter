@@ -73,6 +73,7 @@ scrape_configs:
 Import [`examples/grafana-dashboard.json`](examples/grafana-dashboard.json) into
 your Grafana (Dashboards → Import). It shows device info, uptime, per-port speed,
 throughput, and errors. Select your Prometheus data source when prompted.
+<img width="1870" height="992" alt="Screenshot 2026-09-17 at 13-46-48 Mercury SE109 Pro - Switch - Dashboards - Grafana" src="https://github.com/user-attachments/assets/3c2fa480-8f43-4c72-866e-ea39a0ca3513" />
 
 ---
 
