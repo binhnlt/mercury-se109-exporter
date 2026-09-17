@@ -1,0 +1,7 @@
+# Add this job to your existing Prometheus prometheus.yml, under scrape_configs:
+  - job_name: mercury_switch
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['THE_EXPORTER_HOST:9109']   # host running mercury_exporter
+        labels:
+          switch: mercury-se109-pro

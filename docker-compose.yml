@@ -1,0 +1,23 @@
+# Optional convenience wrapper to run just the exporter.
+# You bring your own Prometheus + Grafana (see examples/).
+services:
+  exporter:
+    build: ./exporter
+    # Or use a prebuilt image instead of build:
+    # image: ghcr.io/YOUR_USER/mercury-se109-exporter:latest
+    container_name: mercury-exporter
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "9109:9109"
+
+# The switch may sit behind a reduced-MTU path (VPN / cloud tunnel). If the
+# exporter can TCP-connect but every scrape times out (mercury_switch_up=0),
+# the container's 1500-byte packets are being black-holed. Match the host MTU:
+#   ip link show <iface> | grep -o 'mtu [0-9]*'
+# then set it here. On a normal 1500-MTU LAN you can delete this whole block.
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: "1280"

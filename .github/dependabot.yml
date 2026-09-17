@@ -1,0 +1,36 @@
+# Keeps dependencies up to date automatically.
+# Docs: https://docs.github.com/code-security/dependabot
+version: 2
+updates:
+  # Python packages (prometheus_client)
+  - package-ecosystem: "pip"
+    directory: "/exporter"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies"]
+    commit-message:
+      prefix: "pip"
+    groups:
+      python-deps:
+        patterns: ["*"]
+
+  # Docker base image in exporter/Dockerfile
+  - package-ecosystem: "docker"
+    directory: "/exporter"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies"]
+    commit-message:
+      prefix: "docker"
+
+  # The GitHub Actions used in these workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies"]
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions:
+        patterns: ["*"]

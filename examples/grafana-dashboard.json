@@ -1,0 +1,155 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "title": "Mercury SE109 Pro - Switch",
+  "uid": "mercury-se109",
+  "tags": ["mercury", "switch", "network"],
+  "timezone": "",
+  "time": { "from": "now-6h", "to": "now" },
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "templating": { "list": [] },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Device",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "Reachable",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } } ],
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] }
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "none" },
+      "targets": [ { "expr": "mercury_switch_up", "refId": "A" } ]
+    },
+    {
+      "type": "stat",
+      "title": "Uptime",
+      "gridPos": { "h": 4, "w": 6, "x": 4, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "dtdurations", "color": { "mode": "fixed", "fixedColor": "text" } } },
+      "options": { "graphMode": "none", "colorMode": "none" },
+      "targets": [ { "expr": "mercury_switch_uptime_seconds", "refId": "A" } ]
+    },
+    {
+      "type": "stat",
+      "title": "Ports with link up",
+      "gridPos": { "h": 4, "w": 4, "x": 10, "y": 1 },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [ { "color": "text", "value": null } ] } } },
+      "options": { "graphMode": "none" },
+      "targets": [ { "expr": "sum(mercury_port_link_up)", "refId": "A" } ]
+    },
+    {
+      "type": "stat",
+      "title": "Aggregate uplink rate (all ports)",
+      "gridPos": { "h": 4, "w": 6, "x": 14, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "pps", "color": { "mode": "fixed", "fixedColor": "blue" } } },
+      "options": { "graphMode": "area", "colorMode": "none" },
+      "targets": [ { "expr": "sum(rate(mercury_port_rx_good_packets_total[5m]) + rate(mercury_port_tx_good_packets_total[5m]))", "refId": "A" } ]
+    },
+    {
+      "type": "table",
+      "title": "Device information",
+      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 5 },
+      "description": "Static identity scraped from the switch. CPU, RAM, temperature and fan are NOT exposed by this hardware, so they cannot be shown.",
+      "options": { "showHeader": true },
+      "fieldConfig": { "defaults": { "custom": { "align": "left" } } },
+      "targets": [ { "expr": "mercury_switch_info", "instant": true, "format": "table", "refId": "A" } ],
+      "transformations": [
+        { "id": "organize", "options": {
+          "excludeByName": { "Time": true, "__name__": true, "Value": true, "job": true, "instance": true },
+          "renameByName": {
+            "hostname": "Hostname", "ip": "IP address", "netmask": "Netmask", "gateway": "Gateway",
+            "mac": "MAC", "model": "Model", "firmware": "Firmware"
+          },
+          "indexByName": {
+            "hostname": 0, "model": 1, "ip": 2, "mac": 3, "netmask": 4, "gateway": 5, "firmware": 6
+          }
+        } }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Ports",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 10 },
+      "collapsed": false
+    },
+    {
+      "type": "table",
+      "title": "Current port speed (negotiated link)",
+      "gridPos": { "h": 9, "w": 8, "x": 0, "y": 11 },
+      "options": { "showHeader": true, "sortBy": [ { "displayName": "Port", "desc": false } ] },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "align": "center", "cellOptions": { "type": "color-text" } },
+          "mappings": [
+            { "type": "value", "options": {
+              "0":     { "text": "Down",  "color": "text" },
+              "10":    { "text": "10M",   "color": "orange" },
+              "100":   { "text": "100M",  "color": "yellow" },
+              "1000":  { "text": "1G",    "color": "green" },
+              "2500":  { "text": "2.5G",  "color": "blue" },
+              "10000": { "text": "10G",   "color": "purple" }
+            } }
+          ]
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "port" }, "properties": [ { "id": "displayName", "value": "Port" } ] },
+          { "matcher": { "id": "byName", "options": "Value" }, "properties": [ { "id": "displayName", "value": "Speed" } ] }
+        ]
+      },
+      "targets": [ { "expr": "mercury_port_speed_mbps", "instant": true, "format": "table", "refId": "A" } ],
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true, "switch": true } } }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "RX rate per port (pps)",
+      "gridPos": { "h": 9, "w": 8, "x": 8, "y": 11 },
+      "fieldConfig": { "defaults": { "unit": "pps", "custom": { "drawStyle": "line", "fillOpacity": 10 } } },
+      "targets": [ { "expr": "rate(mercury_port_rx_good_packets_total[5m])", "legendFormat": "port {{port}}", "refId": "A" } ]
+    },
+    {
+      "type": "timeseries",
+      "title": "TX rate per port (pps)",
+      "gridPos": { "h": 9, "w": 8, "x": 16, "y": 11 },
+      "fieldConfig": { "defaults": { "unit": "pps", "custom": { "drawStyle": "line", "fillOpacity": 10 } } },
+      "targets": [ { "expr": "rate(mercury_port_tx_good_packets_total[5m])", "legendFormat": "port {{port}}", "refId": "A" } ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Error / bad packets per port (pps)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "fieldConfig": { "defaults": { "unit": "pps", "custom": { "drawStyle": "line", "fillOpacity": 10 } } },
+      "targets": [
+        { "expr": "rate(mercury_port_rx_bad_packets_total[5m])", "legendFormat": "rx err port {{port}}", "refId": "A" },
+        { "expr": "rate(mercury_port_tx_bad_packets_total[5m])", "legendFormat": "tx err port {{port}}", "refId": "B" }
+      ]
+    },
+    {
+      "type": "state-timeline",
+      "title": "Port link speed over time (Mbps)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "fieldConfig": { "defaults": { "unit": "Mbits" } },
+      "targets": [ { "expr": "mercury_port_speed_mbps", "legendFormat": "port {{port}}", "refId": "A" } ]
+    },
+    {
+      "type": "text",
+      "title": "Notes",
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 28 },
+      "options": {
+        "mode": "markdown",
+        "content": "**Data source:** the Mercury SE109 Pro web UI (no SNMP). Metrics are scraped from `PortStatisticsRpm.htm` (per-port packet counters) and `MainRpm.htm` (device info + uptime).\n\n**Not available on this hardware:** CPU load, RAM usage, temperature and fan sensors are not exposed by the switch, and byte counters do not exist — so traffic rates are shown in **packets/sec**, not bits/sec. `Speed` is the negotiated link speed."
+      }
+    }
+  ]
+}
