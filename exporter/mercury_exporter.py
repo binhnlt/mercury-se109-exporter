@@ -31,8 +31,8 @@ import time
 import urllib.parse
 import urllib.request
 
-from prometheus_client import start_http_server, REGISTRY
-from prometheus_client.core import GaugeMetricFamily, CounterMetricFamily
+from prometheus_client import REGISTRY, start_http_server
+from prometheus_client.core import CounterMetricFamily, GaugeMetricFamily
 
 # --- TP-Link securityEncode keys (taken verbatim from the switch's cryp_new.js)
 _KEY1 = "RDpbLfCPsJZ7fiv"
@@ -46,7 +46,7 @@ def security_encode(pw, key1=_KEY1, key2=_KEY2):
     """Port of hex_md5()/securityEncode() from the switch's cryp_new.js."""
     out = []
     e, c, j = len(pw), len(key1), len(key2)
-    h = e if e > c else c
+    h = max(c, e)
     for g in range(h):
         l = 187
         i = 187
@@ -64,7 +64,7 @@ def security_encode(pw, key1=_KEY1, key2=_KEY2):
 class SwitchClient:
     def __init__(self, host, user, password, timeout=8,
                  stats_path="PortStatisticsRpm.htm"):
-        self.base = "http://%s" % host
+        self.base = f"http://{host}"
         self.user = user
         self.password = password
         self.timeout = timeout
@@ -105,8 +105,8 @@ class SwitchClient:
         err = int(m.group(1)) if m else -1
         if err != 0:
             raise RuntimeError(
-                "login failed (logonInfo code=%s; 1=bad user/pass, "
-                "2=not allowed/locked, 5=session timeout)" % err)
+                f"login failed (logonInfo code={err}; 1=bad user/pass, "
+                "2=not allowed/locked, 5=session timeout)")
         return True
 
     def _is_login_page(self, html):
@@ -164,7 +164,7 @@ def _nums(body):
 
 
 def _scalar(html, name):
-    m = re.search(r"var\s+%s\s*=\s*(\d+)" % re.escape(name), html)
+    m = re.search(rf"var\s+{re.escape(name)}\s*=\s*(\d+)", html)
     return int(m.group(1)) if m else None
 
 
@@ -273,7 +273,7 @@ class SwitchCollector:
             html = self.client.fetch_stats()
             ports = parse_stats(html)
         except Exception as e:  # noqa: BLE001
-            sys.stderr.write("scrape error: %s\n" % e)
+            sys.stderr.write(f"scrape error: {e}\n")
             up.add_metric([], 0.0)
             yield up
             return
@@ -284,7 +284,7 @@ class SwitchCollector:
         try:
             sysinfo = parse_system(self.client.fetch_system())
         except Exception as e:  # noqa: BLE001
-            sys.stderr.write("system-info scrape error: %s\n" % e)
+            sys.stderr.write(f"system-info scrape error: {e}\n")
             sysinfo = None
         if sysinfo:
             upt = GaugeMetricFamily(
@@ -366,8 +366,8 @@ def main():
 
     REGISTRY.register(SwitchCollector(client))
     start_http_server(port)
-    sys.stderr.write("mercury_exporter serving /metrics on :%d (switch %s)\n"
-                     % (port, host))
+    sys.stderr.write(
+        f"mercury_exporter serving /metrics on :{port} (switch {host})\n")
     while True:
         time.sleep(3600)
 
